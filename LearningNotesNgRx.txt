@@ -1,0 +1,53 @@
+NgRx
+
+ng add @ngrx/store
+added to app.module:
+StoreModule.forRoot({}, {})
+
+In product.module: in imports:
+StoreModule.forFeature('products', {})
+
+create state folder in products =>
+in state => product.reducer.ts
+then code:
+export const productReducer = createReducer(
+    {showProductCode: true},
+    on(createAction('[Product], Toggle Product'), state => {
+        return {
+            ...state,
+            showProductCode: !state.showProductCode
+        }
+    })
+);
+
+in product.module change:
+StoreModule.forFeature('products', productReducer);
+
+to dispetch action/reducer:
+open product-list.component.ts: add to ctor:
+private store: Store<any>,
+and change code:
+
+  checkChanged(): void {
+    this.store.dispatch({type:'[Product], Toggle Product'});
+    // this.displayCode = !this.displayCode;
+  }
+
+In ngInit add code: 
+    //TODO unsubscribe:
+    this.store.select('products').subscribe(products => {
+      if(products) {
+        this.displayCode = products.showProductCode;
+      }
+    })
+
+
+
+
+
+
+
+
+
+
+
