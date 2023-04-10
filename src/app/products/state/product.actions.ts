@@ -6,5 +6,5 @@ export const setCurrentProduct      = createAction('[Product], Set Current Produ
 export const clearCurrentProduct    = createAction('[Product], Clear Current Product');
 export const initCurrentProduct     = createAction('[Product], Init Current Product');
 export const loadProducts           = createAction('[Product], Load');
-export const loadProductsSuccess    = createAction('[Product], Load Success');
-export const loadProductsFailure    = createAction('[Product], Load Failure');
+export const loadProductsSuccess    = createAction('[Product], Load Success', props<{products: Product[]}>());
+export const loadProductsFailure    = createAction('[Product], Load Failure', props<{error: string}>());
