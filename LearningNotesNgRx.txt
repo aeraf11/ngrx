@@ -209,7 +209,107 @@ to
             next: p => this.store.dispatch(ProductAction.setCurrentProduct({product: p})),
 Then delete behavior subject and its observables from productService:
 
+Effects:
 
+create file product.effects.ts and code as:
+import { Injectable } from "@angular/core";
+import { Actions, createEffect, ofType } from "@ngrx/effects";
+import { ProductService } from "../product.service";
+import * as ProductActions from './product.actions';
+import { map, mergeMap } from "rxjs/operators";
+
+@Injectable()
+export class ProductEffects {
+
+    constructor(private action$: Actions, private productService: ProductService) {}
+
+    loadProducts$ = createEffect(()=>{
+        return this.action$.pipe(
+            ofType(ProductActions.loadProducts),
+            mergeMap(()=> this.productService.getProducts().pipe(
+                map(products => ProductActions.loadProductsSuccess({products}))
+            ))
+        )
+    })
+}
+in product.service.ts remove products
+
+in products.module.ts in imports add:
+    EffectsModule.forFeature([ProductEffects])
+
+in product-list.component.ts delete 
+this.productSelected.getProducts() in ngOnInit() method.
+and add:
+    this.store.dispatch(ProductAction.loadProducts());
+    this.products$ = this.store.select(getProducts);
+and delete products$ property
+and change products$ to:
+  products$: Observable<Product[]>;
+
+in product-list.component.html change from:
+  <div class="card-body" *ngIf="products?.length">
+to
+  <div class="card-body" *ngIf="products$ | async as products">
+
+in product-list.component.ts in onNgInit() change from :
+     this.store.select(getCurrentProduct).subscribe(
+      currentProduct => this.selectedProduct = currentProduct
+    );
+to 
+    this.selectedProduct$ = this.store.select(getCurrentProduct)
+and delete property selectedProduct$
+and change from :
+  //TODO unsubscribe:
+  this.store.select(getShowProductCode).subscribe( 
+      showProductCode => this.displayCode = showProductCode
+    )
+to
+this.displayCode$ = this.store.select(getShowProductCode);
+then remove from ctor 
+, private productService: ProductService
+then delete
+products, selectedProduct declarations
+
+in product-list.component.html change selectedProduct & displayCode to async as:
+              [ngClass]="{'active': product?.id === (selectedProduct$ | async)?.id}"
+and 
+        <ng-container *ngIf="displayCode$ | async">
+and 
+                 [checked]="displayCode$ | async">
+In product-edit.component.ts change from:
+    this.store.select(getCurrentProduct).subscribe(
+      currentProduct => this.displayProduct(currentProduct)
+    );
+to
+    this.product$ = this.store.select(getCurrentProduct).pipe(
+      tap(
+        currentProduct => this.displayProduct(currentProduct)
+      )
+    )
+and deleteProperty product$ and set product$ as:
+  product$: Observable<Product>;
+
+in product.effects.ts add error handling work:
+ catchError(error => of(ProductActions.loadProductsFailure({error})))
+
+in reducer code as:
+export const getError = createSelector(
+    getProductFeatureState,
+    state => state.error
+)
+    on(ProductAction.loadProductsFailure, (state, action): ProductState => {
+        return{
+            ...state,
+            products: [],
+            error: action.error
+        }
+    })
+
+In product-list.component.ts add in ngOnInit() as:
+    this.displayCode$ = this.store.select(getShowProductCode);
+
+in product-list-component.html
+	<div *ngIf="errorMessage$ | async as errorMessage"
 
 
 
