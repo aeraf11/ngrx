@@ -11,7 +11,7 @@ import { Observable } from 'rxjs';
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
-export class ProductListComponent implements OnInit, OnDestroy {
+export class ProductListComponent implements OnInit {
   pageTitle = 'Products';
 
   products$: Observable<Product[]>;
@@ -29,10 +29,6 @@ export class ProductListComponent implements OnInit, OnDestroy {
     this.products$ = this.store.select(getProducts);
     this.store.dispatch(ProductAction.loadProducts());
     this.displayCode$ = this.store.select(getShowProductCode);
-  }
-
-  ngOnDestroy(): void {
-    // this.sub.unsubscribe();
   }
 
   checkChanged(): void {

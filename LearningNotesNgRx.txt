@@ -330,6 +330,77 @@ export const getCurrentProduct = createSelector(
     }
 );
 
+also change code in product.actions as:
+export const setCurrentProduct      = createAction('[Product], Set Current Product', props<{currentProductId: number}>());
+and in change code for currentProductId for product-edit.component.ts and product-list.component.ts
+
+In product.effects.ts add code:
+    updateProducts$ = createEffect(()=>{
+        return this.action$.pipe(
+            ofType(ProductActions.updateProduct),
+            concatMap((action)=> this.productService.updateProduct(action.product).pipe(
+                map(product => ProductActions.updateProductSuccess({product})),
+                catchError(error => of(ProductActions.updateProductFailure({error})))
+            ))
+        )
+    })
+	
+In reducer add code:
+    on(ProductAction.updateProductSuccess, (state, action): ProductState => {
+        const updatedProducts = state.products.map(
+            item => action.product.id === item.id ? action.product : item
+        )
+        return{
+            ...state,
+            products: updatedProducts,
+            currentProductId: action.product.id,
+            error: ''
+        }
+    }),
+    on(ProductAction.updateProductFailure, (state, action): ProductState => {
+        return{
+            ...state,
+            products: [],
+            error: action.error
+        }
+    })
+
+In product-edit.component.ts change code from:
+  saveProduct(originalProduct: Product): void {
+    if (this.productForm.valid) {
+      if (this.productForm.dirty) {
+        const product = { ...originalProduct, ...this.productForm.value };
+        if (product.id === 0) {
+          this.productService.createProduct(product).subscribe({
+            next: p => this.store.dispatch(ProductAction.setCurrentProduct({currentProductId: p.id})),
+            error: err => this.errorMessage = err
+          });
+        } else {
+          this.productService.updateProduct(product).subscribe({
+            next: p => this.store.dispatch(ProductAction.setCurrentProduct({currentProductId: p.id})),
+            error: err => this.errorMessage = err
+          });
+        }
+      }
+    }
+  }
+to
+  saveProduct(originalProduct: Product): void {
+    if (this.productForm.valid) {
+      if (this.productForm.dirty) {
+        // Copy over all of the original product properties
+        // Then copy over the values from the form
+        // This ensures values not on the form, such as the Id, are retained
+        const product = { ...originalProduct, ...this.productForm.value };
+
+        if (product.id === 0) {
+          this.store.dispatch(ProductAction.createProduct({product}));
+        } else {
+          this.store.dispatch(ProductAction.updateProduct({product}));
+        }
+      }
+    }
+  }
 
 
 
