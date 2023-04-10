@@ -42,10 +42,79 @@ In ngInit add code:
     })
 
 
+Strongly Typed State:
 
+In product.reducer.ts: add:
+export interface ProductState {
+    showProductCode: boolean;
+    currentProduct: Product;
+    products: Product[];
+}
 
+in app folder create:
+state/app.state.ts and define entire store state as:
+export interface State {
+    products: ProductState,
+    user: UserState;
+}
 
+For Lazyloading add code in product.reducer.ts as:
+import * as AppState from '../../state/app.state'
 
+export interface State extends AppState.State {
+    products: ProductState;
+}
+
+change productReducer as:
+export const productReducer = createReducer<ProductState>(
+    {showProductCode: true} as ProductState,
+    on(createAction('[Product], Toggle Product'), (state):ProductState  => {
+        return {
+            ...state,
+            showProductCode: !state.showProductCode
+        }
+    })
+);
+
+in product-list.component.ts change:
+private store: Store<any>,
+to 
+private store: Store<State>, // where State is imported from productReducer
+
+define initial state in product.reducer.ts as:
+const initialState: ProductState = {
+    showProductCode: true,
+    currentProduct: null,
+    products: []
+}
+and change line:
+    {showProductCode: true} as ProductState,
+as 
+    initialState,
+
+in product-list.component.ts: remove if from this.state.select and code change as:
+  this.store.select('products').subscribe( //now we have to remove hardcoded products here
+      products => this.displayCode = products.showProductCode
+    )
+  }
+
+Creating Selector:
+in product.reducer.ts 
+const getProductFeatureState = createFeatureSelector<ProductState>('products');
+export const getShowProductCode = createSelector(
+    getProductFeatureState,
+    state => state.showProductCode
+);
+export const getCurrentProduct = createSelector(
+    getProductFeatureState,
+    state => state.currentProduct
+);
+export const getProducts = createSelector(
+    getProductFeatureState,
+    state => state.products
+);
+
+Using Selectors:
 
 
 
