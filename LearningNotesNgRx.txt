@@ -311,6 +311,24 @@ In product-list.component.ts add in ngOnInit() as:
 in product-list-component.html
 	<div *ngIf="errorMessage$ | async as errorMessage"
 
+Effects in edit operations:
+
+first change from currentProduct to currentProductId in reducer
+and add code for getCurrentProduct as
+export const getCurrentProduct = createSelector(
+    getProductFeatureState,
+    getCurrentProductId,
+    (state, currentProductId) => {
+        if(currentProductId === 0){
+            return{
+                initialProduct
+            }
+        }
+        else {
+            return currentProductId ? state.products.find(p=> p.id === currentProductId) : null;
+        }
+    }
+);
 
 
 
